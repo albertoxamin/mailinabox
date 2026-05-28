@@ -81,13 +81,16 @@ tools/editconf.py /etc/redis/redis.conf -s \
 	dir="$STORAGE_ROOT/mail/rspamd/redis" \
 	maxmemory-policy=noeviction
 
-# Ubuntu's redis-server systemd unit ships with `ProtectSystem=strict`
-# plus a `ReadWritePaths=/var/lib/redis ...` allowlist. Pointing `dir` at
-# $STORAGE_ROOT makes redis exit at start before it can log anything --
-# add a systemd drop-in that whitelists our path.
+# Ubuntu's redis-server systemd unit ships with `ProtectHome=true` (which
+# hides /home from the daemon entirely) and a `ReadWritePaths=/var/lib/redis`
+# allowlist. Pointing `dir` at $STORAGE_ROOT (typically /home/user-data/...)
+# makes redis exit immediately -- before it can log anything -- because it
+# cannot see its own data directory. Add a drop-in that disables ProtectHome
+# and whitelists our path.
 mkdir -p /etc/systemd/system/redis-server.service.d
 cat > /etc/systemd/system/redis-server.service.d/miab-storage.conf <<EOF
 [Service]
+ProtectHome=false
 ReadWritePaths=$STORAGE_ROOT/mail/rspamd/redis
 EOF
 systemctl daemon-reload
