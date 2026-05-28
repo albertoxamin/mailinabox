@@ -11,9 +11,9 @@
 # As part of local mail delivery, Dovecot executes actions on incoming
 # mail as defined in a "sieve" script.
 #
-# Dovecot's LDA role comes after spam filtering. Postfix hands mail off
-# to Spamassassin which in turn hands it off to Dovecot. This all happens
-# using the LMTP protocol.
+# Dovecot's LDA role comes after spam filtering. Postfix hands mail
+# directly to Dovecot over LMTP; spam scanning and DKIM/DMARC checks are
+# applied by Rspamd as a Postfix milter before that.
 
 source setup/functions.sh # load our functions
 source /etc/mailinabox.conf # load global vars
@@ -141,24 +141,19 @@ tools/editconf.py /etc/dovecot/conf.d/20-pop3.conf \
 
 # ### LDA (LMTP)
 
-# Enable Dovecot's LDA service with the LMTP protocol. It will listen
-# on port 10026, and Spamassassin will be configured to pass mail there.
-#
-# The disabled unix socket listener is normally how Postfix and Dovecot
-# would communicate (see the Postfix setup script for the corresponding
-# setting also commented out).
+# Enable Dovecot's LDA service over LMTP. Postfix talks to it over a unix
+# socket in its chroot. Rspamd runs as a Postfix milter, so by the time
+# mail reaches this socket it has already been spam-scanned and DKIM
+# checks applied.
 #
 # Also increase the number of allowed IMAP connections per mailbox because
 # we all have so many devices lately.
 cat > /etc/dovecot/conf.d/99-local.conf << EOF;
 service lmtp {
-  #unix_listener /var/spool/postfix/private/dovecot-lmtp {
-  #  user = postfix
-  #  group = postfix
-  #}
-  inet_listener lmtp {
-    address = 127.0.0.1
-    port = 10026
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    user = postfix
+    group = postfix
+    mode = 0600
   }
 }
 

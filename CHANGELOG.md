@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+In development
+--------------
+
+* Replaced SpamAssassin (via spampd), OpenDKIM, OpenDMARC and postgrey with [Rspamd](https://rspamd.com/) running as a Postfix milter. Rspamd handles spam scoring, Bayes (backed by Redis), DKIM signing, DKIM/SPF/DMARC verification and greylisting in a single daemon. Mail is now delivered from Postfix straight to Dovecot LMTP; the spampd hop is gone. Spam/ham learning is wired up via Dovecot's `imap_sieve` plugin (moving messages into or out of the Spam folder pipes them to `rspamc learn_spam`/`learn_ham`).
+* The existing DKIM key under `$STORAGE_ROOT/mail/dkim/mail.private` is re-used for the new signer; published DKIM DNS records do not change.
+* On upgrade the old SpamAssassin/OpenDKIM/OpenDMARC/postgrey services are stopped and disabled, but their packages and on-disk data (including the SpamAssassin Bayes files and the postgrey database) are deliberately left in place so an in-place rollback is still possible.
+
 Version 76 (May 24, 2026)
 -------------------------
 

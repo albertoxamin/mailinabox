@@ -1,7 +1,9 @@
-require ["regex", "fileinto", "imap4flags"];
+require ["fileinto"];
 
-if allof (header :regex "X-Spam-Status" "^Yes") {
+# Rspamd adds an "X-Spam: Yes" header on messages whose action is at least
+# add_header (see setup/rspamd.sh, /etc/rspamd/local.d/actions.conf and
+# milter_headers.conf). File those into the user's Spam folder.
+if header :is "X-Spam" "Yes" {
   fileinto "Spam";
   stop;
 }
-
