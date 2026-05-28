@@ -283,11 +283,10 @@ EOF
 
 chmod +x /etc/dovecot/sieve/bin/rspamc-learn-spam.sh /etc/dovecot/sieve/bin/rspamc-learn-ham.sh
 
-# Pre-compile the learning sieve scripts so dovecot does not need to do it
-# at first use (when it may not have permission anyway).
-sievec /etc/dovecot/sieve/learn-spam.sieve
-sievec /etc/dovecot/sieve/learn-ham.sieve
-
+# Do NOT pre-compile with sievec: the `imapsieve` capability is only
+# exposed inside an IMAP session, so standalone sievec rejects the
+# require line. Dovecot compiles & caches these scripts on first use
+# when the imap_sieve hook fires; the directory is writable to it.
 chown -R mail:dovecot /etc/dovecot/sieve
 
 # ### Postfix milter wiring
