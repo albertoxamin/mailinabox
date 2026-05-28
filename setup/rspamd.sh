@@ -69,10 +69,29 @@ apt_install rspamd redis-server opendkim-tools
 mkdir -p "$STORAGE_ROOT/mail/rspamd/redis"
 chown -R redis:redis "$STORAGE_ROOT/mail/rspamd/redis"
 
+# Bind to v4 always; only add ::1 if the host actually has IPv6 (otherwise
+# redis refuses to start with "Cannot assign requested address").
+redis_bind="127.0.0.1"
+if ip -6 addr show scope host 2>/dev/null | grep -q '::1'; then
+	redis_bind="127.0.0.1 ::1"
+fi
+
 tools/editconf.py /etc/redis/redis.conf -s \
-	bind="127.0.0.1 ::1" \
+	bind="$redis_bind" \
 	dir="$STORAGE_ROOT/mail/rspamd/redis" \
 	maxmemory-policy=noeviction
+
+# Ubuntu's redis-server systemd unit ships with `ProtectSystem=strict`
+# plus a `ReadWritePaths=/var/lib/redis ...` allowlist. Pointing `dir` at
+# $STORAGE_ROOT makes redis exit at start before it can log anything --
+# add a systemd drop-in that whitelists our path.
+mkdir -p /etc/systemd/system/redis-server.service.d
+cat > /etc/systemd/system/redis-server.service.d/miab-storage.conf <<EOF
+[Service]
+ReadWritePaths=$STORAGE_ROOT/mail/rspamd/redis
+EOF
+systemctl daemon-reload
+systemctl reset-failed redis-server 2>/dev/null || true
 
 restart_service redis-server
 
