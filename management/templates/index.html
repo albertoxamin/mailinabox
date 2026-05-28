@@ -10,86 +10,650 @@
         <meta name="robots" content="noindex, nofollow">
 
         <link rel="stylesheet" href="/admin/assets/bootstrap/css/bootstrap.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap">
         <style>
-            body {
-              overflow-y: scroll;
-              padding-bottom: 20px;
+          /* ============================================================
+             Mail-in-a-Box admin — "Console Editorial"
+             Bodoni Moda italic display · JetBrains Mono labels ·
+             Atkinson Hyperlegible body · warm ink + acid orange.
+             ============================================================ */
+
+          :root {
+            --ink:        #0e0c0a;
+            --ink-2:      #14110d;
+            --panel:      #1a1612;
+            --panel-2:    #221c16;
+            --hairline:   #2e251c;
+            --hairline-2: #3a2f23;
+            --paper:      #efe4d0;
+            --paper-dim:  #c8bda9;
+            --muted:      #8a7f6f;
+            --muted-2:    #5b5347;
+            --accent:     #ff6a1a;   /* signal orange */
+            --accent-2:   #ffb070;
+            --ok:         #b6d96a;
+            --warn:       #f3c247;
+            --danger:     #ff5454;
+            --link:       #ffb070;
+
+            --serif:  "Bodoni Moda", "Didot", "Times New Roman", serif;
+            --mono:   "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+            --sans:   "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+
+            --measure: 64ch;
+            --hair:   1px solid var(--hairline);
+          }
+
+          html, body {
+            background: var(--ink);
+            color: var(--paper);
+          }
+
+          /* Soft warm vignette + film-grain overlay across the whole UI */
+          body {
+            font-family: var(--sans);
+            font-size: 15.5px;
+            line-height: 1.62;
+            font-feature-settings: "ss01", "kern", "liga";
+            overflow-y: scroll;
+            padding-bottom: 4rem;
+            min-height: 100vh;
+            background:
+              radial-gradient(1200px 700px at 85% -10%, rgba(255,106,26,.10), transparent 60%),
+              radial-gradient(900px 600px at -5% 110%, rgba(255,176,112,.05), transparent 55%),
+              linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+            background-attachment: fixed;
+            position: relative;
+          }
+          body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            opacity: .55;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.88  0 0 0 0 0.74  0 0 0 0.45 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+            background-size: 220px 220px;
+          }
+          body > * { position: relative; z-index: 2; }
+
+          ::selection { background: var(--accent); color: var(--ink); }
+
+          /* Staggered fade-in on first paint */
+          @keyframes editorial-rise {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: none; }
+          }
+          .navbar, .container > .admin_panel.is-active, footer {
+            animation: editorial-rise .8s cubic-bezier(.2,.7,.2,1) both;
+          }
+          .navbar             { animation-delay: 0ms;  }
+          .admin_panel.is-active { animation-delay: 120ms; }
+          footer              { animation-delay: 240ms; }
+
+          /* The Bootstrap-3 panel hide/show contract — keep it, but let us
+             attach `.is-active` so the rise animation only fires on the
+             panel actually being shown. */
+          .admin_panel { display: none; }
+
+          /* ---------- Container ---------- */
+          .container {
+            max-width: 1180px;
+            padding-left: 32px;
+            padding-right: 32px;
+          }
+          @media (min-width: 992px) {
+            .container {
+              padding-left: 56px;
+              padding-right: 56px;
             }
+          }
 
-            p {
-              margin-bottom: 1.25em;
-            }
+          /* ---------- Typography ---------- */
+          h1, h2, h3, h4, h5, h6 {
+            font-family: var(--mono);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--paper);
+          }
+          h1 {
+            font-family: var(--serif);
+            font-style: italic;
+            font-weight: 500;
+            font-size: clamp(2.6rem, 6vw, 4.4rem);
+            line-height: 1.02;
+            letter-spacing: -0.025em;
+            margin: 1.2em 0 .6em;
+          }
+          h2 {
+            font-size: 1.6rem;
+            margin: 2.2rem 0 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-weight: 500;
+          }
+          h2::before {
+            content: "§ ";
+            color: var(--accent);
+            font-family: var(--serif);
+            font-style: italic;
+            font-weight: 400;
+            letter-spacing: 0;
+            text-transform: none;
+            margin-right: .15em;
+          }
+          h3 {
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-weight: 600;
+            padding: 0 0 .55rem;
+            margin: 2.4rem 0 1.1rem;
+            border-bottom: 1px solid var(--hairline);
+            color: var(--paper);
+            position: relative;
+          }
+          h3::after {
+            content: "";
+            position: absolute;
+            left: 0; bottom: -1px;
+            width: 3rem; height: 1px;
+            background: var(--accent);
+          }
+          .panel-heading h3 {
+            border: none;
+            padding: 0;
+            margin: 0;
+          }
+          .panel-heading h3::after { display: none; }
+          h4 {
+            font-size: .82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--muted);
+            margin: 1.6rem 0 .8rem;
+            font-weight: 600;
+          }
+          h4:first-child { margin-top: .4rem; }
 
-            h1, h2, h3, h4 {
-              font-family: sans-serif;
-              font-weight: bold;
-            }
+          p {
+            max-width: var(--measure);
+            margin-bottom: 1.1em;
+            color: var(--paper-dim);
+          }
+          p strong, p b { color: var(--paper); }
+          .text-muted    { color: var(--muted) !important; }
+          .text-danger   { color: var(--danger) !important; }
+          .text-warning  { color: var(--warn) !important; }
+          .text-success  { color: var(--ok) !important; }
+          .text-info     { color: var(--accent-2) !important; }
 
-            h2 {
-              margin: 1em 0;
-            }
+          em, i { font-family: var(--serif); font-style: italic; }
 
-            h3 {
-              font-size: 130%;
-              border-bottom: 1px solid black;
-              padding-bottom: 3px;
-              margin-bottom: 13px;
-              margin-top: 30px;
-            }
-            .panel-heading h3 {
-              border: none;
-              padding: 0;
-              margin: 0;
-            }
+          a {
+            color: var(--link);
+            text-decoration: none;
+            border-bottom: 1px solid color-mix(in oklch, var(--link) 35%, transparent);
+            transition: color .15s ease, border-color .15s ease, background .15s ease;
+          }
+          a:hover, a:focus {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+          }
 
-            h4 {
-              font-size: 110%;
-              margin-bottom: 13px;
-              margin-top: 18px;
-            }
-            h4:first-child {
-              margin-top: 6px;
-            }
+          code, kbd, samp {
+            font-family: var(--mono);
+            font-size: .92em;
+            background: var(--ink-2);
+            color: var(--accent-2);
+            padding: 1px 6px;
+            border: 1px solid var(--hairline);
+            border-radius: 0;
+          }
+          pre {
+            font-family: var(--mono);
+            font-size: .88rem;
+            background: var(--ink-2);
+            color: var(--paper);
+            border: 1px solid var(--hairline);
+            border-left: 2px solid var(--accent);
+            border-radius: 0;
+            padding: 14px 18px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 1.2em 0;
+          }
+          pre code { background: none; border: none; padding: 0; color: inherit; }
 
-            .admin_panel {
-              display: none;
-            }
+          hr {
+            border: 0;
+            border-top: 1px solid var(--hairline);
+            margin: 2.4rem 0;
+            position: relative;
+          }
+          hr::after {
+            content: "·  ·  ·";
+            position: absolute;
+            top: -.85em;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            padding: 0 .8em;
+            color: var(--muted-2);
+            font-family: var(--serif);
+            letter-spacing: .4em;
+          }
+          ol, ul { color: var(--paper-dim); }
+          ol li, ul li { margin-bottom: .8em; max-width: var(--measure); }
 
-            table.table {
-              margin: 1.5em 0;
-            }
+          /* ---------- Navbar ---------- */
+          .navbar.navbar-inverse {
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid var(--hairline);
+            border-radius: 0;
+            margin-bottom: 2.4rem;
+            min-height: 76px;
+            backdrop-filter: blur(8px);
+          }
+          .navbar.navbar-inverse .container {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+          }
+          .navbar-brand {
+            font-family: var(--serif) !important;
+            font-style: italic;
+            font-weight: 500;
+            font-size: 1.7rem !important;
+            letter-spacing: -0.01em;
+            color: var(--paper) !important;
+            height: auto;
+            padding: 22px 0 22px !important;
+            margin-right: 2.2rem;
+            display: flex;
+            align-items: baseline;
+            gap: .65rem;
+            border-bottom: 0;
+          }
+          .navbar-brand::before {
+            content: "▮";
+            color: var(--accent);
+            font-style: normal;
+            font-size: .9rem;
+            transform: translateY(-2px);
+          }
+          .navbar-brand::after {
+            content: "Mail-in-a-Box";
+            font-family: var(--mono);
+            font-style: normal;
+            font-size: .62rem;
+            letter-spacing: .28em;
+            text-transform: uppercase;
+            color: var(--muted);
+            transform: translateY(-2px);
+            margin-left: .5rem;
+            padding-left: .75rem;
+            border-left: 1px solid var(--hairline-2);
+          }
+          .navbar-nav > li > a {
+            color: var(--paper-dim) !important;
+            font-family: var(--mono) !important;
+            font-size: .82rem !important;
+            text-transform: uppercase;
+            letter-spacing: .16em;
+            padding: 28px 16px !important;
+            border-bottom: 0;
+            transition: color .15s ease, background .15s ease;
+            position: relative;
+          }
+          .navbar-nav > li > a:hover,
+          .navbar-nav > li > a:focus,
+          .navbar-nav > li.open > a {
+            color: var(--paper) !important;
+            background: transparent !important;
+          }
+          .navbar-nav > li > a:hover::after,
+          .navbar-nav > li.open > a::after {
+            content: "";
+            position: absolute;
+            left: 16px; right: 16px;
+            bottom: 18px;
+            height: 1px;
+            background: var(--accent);
+          }
+          .navbar-nav > li > a .caret {
+            border-top-color: var(--muted);
+            margin-left: .35em;
+          }
+          .navbar-toggle {
+            border: 1px solid var(--hairline-2);
+            border-radius: 0;
+            margin-top: 22px;
+          }
+          .navbar-toggle .icon-bar {
+            background-color: var(--paper-dim) !important;
+          }
+          .dropdown-menu {
+            background: var(--panel);
+            border: 1px solid var(--hairline-2);
+            border-radius: 0;
+            box-shadow: 0 24px 48px -16px rgba(0,0,0,.6);
+            padding: 6px 0;
+            min-width: 220px;
+          }
+          .dropdown-menu > li > a {
+            color: var(--paper-dim) !important;
+            font-family: var(--mono);
+            font-size: .82rem;
+            letter-spacing: .08em;
+            padding: 8px 18px;
+            border-bottom: 0;
+          }
+          .dropdown-menu > li > a:hover,
+          .dropdown-menu > li > a:focus {
+            background: var(--panel-2) !important;
+            color: var(--accent) !important;
+          }
+          .dropdown-menu .divider {
+            background: var(--hairline);
+            margin: 6px 0;
+          }
+          .dropdown-header {
+            font-family: var(--mono);
+            font-size: .65rem !important;
+            letter-spacing: .26em;
+            text-transform: uppercase;
+            color: var(--muted-2) !important;
+            padding: 10px 18px 4px !important;
+          }
 
-            ol li {
-              margin-bottom: 1em;
-            }
+          /* ---------- Panels (admin sections) ---------- */
+          .admin_panel {
+            padding-top: .4rem;
+          }
+          .panel {
+            background: var(--panel);
+            border: 1px solid var(--hairline);
+            border-radius: 0;
+            box-shadow: none;
+            margin-bottom: 1.6rem;
+          }
+          .panel-default > .panel-heading,
+          .panel > .panel-heading {
+            background: var(--panel-2);
+            color: var(--paper);
+            border-bottom: 1px solid var(--hairline);
+            border-radius: 0;
+            padding: 14px 20px;
+            font-family: var(--mono);
+            font-size: .8rem;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+          }
+          .panel-body { padding: 22px; }
+          .well {
+            background: var(--panel);
+            border: 1px solid var(--hairline);
+            border-radius: 0;
+            box-shadow: none;
+            padding: 18px 20px;
+          }
 
-            .if-logged-in { display: none; }
-            .if-logged-in-admin { display: none; }
+          footer {
+            margin-top: 3rem;
+            padding-top: 1.6rem;
+            border-top: 1px solid var(--hairline);
+            font-family: var(--mono);
+            font-size: .72rem;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--muted);
+          }
+          footer p { color: var(--muted); max-width: none; margin: 0; }
+          footer a { color: var(--paper-dim); border-bottom-color: var(--hairline-2); }
+          footer a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
-      /* The below only gets used if it is supported */
-      @media (prefers-color-scheme: dark) {
-        /* Invert invert lightness but not hue */
-        html {
-          filter: invert(100%) hue-rotate(180deg);
-        }
+          /* ---------- Forms ---------- */
+          label, .control-label {
+            font-family: var(--mono);
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .2em;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: .55rem;
+          }
+          .form-control {
+            background: var(--ink-2) !important;
+            color: var(--paper) !important;
+            border: 1px solid var(--hairline-2);
+            border-radius: 0;
+            box-shadow: none;
+            font-family: var(--sans);
+            font-size: 1rem;
+            padding: 11px 14px;
+            height: auto;
+            min-height: 44px;
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+          }
+          .form-control::placeholder { color: var(--muted-2); }
+          .form-control:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 1px var(--accent), 0 0 24px -8px rgba(255,106,26,.5);
+            background: var(--panel) !important;
+          }
+          select.form-control {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path fill='%23ff6a1a' d='M2 4l4 5 4-5z'/></svg>") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 12px center !important;
+            background-size: 10px 10px !important;
+            padding-right: 34px;
+          }
+          .help-block {
+            font-family: var(--sans);
+            font-size: .82rem;
+            color: var(--muted);
+            margin-top: .35rem;
+          }
+          .checkbox label, .radio label {
+            font-family: var(--sans);
+            font-size: .9rem;
+            text-transform: none;
+            letter-spacing: 0;
+            color: var(--paper-dim);
+            font-weight: 400;
+          }
+          .form-group { margin-bottom: 1.2rem; }
 
-        /* Override Bootstrap theme here to give more contrast. The black turns to white by the filter. */
-        .form-control {
-          color: black !important;
-        }
+          /* ---------- Buttons ---------- */
+          .btn {
+            font-family: var(--mono);
+            font-size: .78rem;
+            text-transform: uppercase;
+            letter-spacing: .22em;
+            font-weight: 600;
+            border-radius: 0;
+            padding: 12px 22px;
+            border: 1px solid var(--hairline-2);
+            background: transparent;
+            color: var(--paper);
+            transition: transform .12s ease, background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
+            position: relative;
+          }
+          .btn:hover, .btn:focus {
+            background: var(--panel-2);
+            color: var(--paper);
+            border-color: var(--paper-dim);
+            outline: none;
+          }
+          .btn:active { transform: translateY(1px); }
+          .btn-default {
+            background: transparent;
+            color: var(--paper-dim);
+            border-color: var(--hairline-2);
+          }
+          .btn-primary {
+            background: var(--accent);
+            color: var(--ink) !important;
+            border-color: var(--accent);
+            text-shadow: none;
+            box-shadow: 0 1px 0 rgba(0,0,0,.25);
+          }
+          .btn-primary:hover, .btn-primary:focus {
+            background: var(--accent-2);
+            border-color: var(--accent-2);
+            color: var(--ink) !important;
+            box-shadow: 0 0 0 1px var(--accent), 0 10px 30px -10px rgba(255,106,26,.55);
+          }
+          .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border-color: color-mix(in oklch, var(--danger) 60%, transparent);
+          }
+          .btn-danger:hover, .btn-danger:focus {
+            background: var(--danger);
+            color: var(--ink) !important;
+            border-color: var(--danger);
+          }
+          .btn-success {
+            background: transparent;
+            color: var(--ok);
+            border-color: color-mix(in oklch, var(--ok) 55%, transparent);
+          }
+          .btn-success:hover, .btn-success:focus {
+            background: var(--ok); color: var(--ink) !important; border-color: var(--ok);
+          }
+          .btn-xs { padding: 5px 10px; font-size: .68rem; letter-spacing: .16em; }
+          .btn-sm { padding: 8px 14px; font-size: .72rem; letter-spacing: .18em; }
+          .btn + .btn { margin-left: .5rem; }
 
-        /* Revert the invert for the navbar */
-        button, div.navbar {
-          filter: invert(100%) hue-rotate(180deg);
-        }
+          /* ---------- Tables ---------- */
+          .table {
+            background: transparent;
+            color: var(--paper-dim);
+            margin: 1.6em 0;
+            border-collapse: separate;
+            border-spacing: 0;
+          }
+          .table > thead > tr > th {
+            border-bottom: 1px solid var(--hairline-2);
+            background: transparent;
+            color: var(--muted);
+            font-family: var(--mono);
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .22em;
+            font-weight: 600;
+            padding: 12px 14px;
+            text-align: left;
+          }
+          .table > tbody > tr > td,
+          .table > tbody > tr > th {
+            border-top: 1px solid var(--hairline);
+            padding: 14px;
+            vertical-align: middle;
+            font-variant-numeric: tabular-nums;
+          }
+          .table > tbody > tr:hover > td {
+            background: rgba(255,106,26,.04);
+          }
+          .table .row-center { text-align: center; }
+          .table code {
+            font-size: .85em;
+            padding: 0 4px;
+            background: var(--ink-2);
+            color: var(--paper);
+            border-color: var(--hairline);
+          }
 
-        /* Revert the revert for the dropdowns */
-        ul.dropdown-menu {
-          filter: invert(100%) hue-rotate(180deg);
-        }
-      }
+          /* Status-checks: bullet symbols inherit colour from text-* classes */
+          .summary-ok, .summary-error, .summary-warning {
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: .18em;
+            font-size: .78rem;
+            margin-right: 1.4em;
+          }
+          .summary-ok      { color: var(--ok); }
+          .summary-error   { color: var(--danger); }
+          .summary-warning { color: var(--warn); }
+
+          /* ---------- Alerts ---------- */
+          .alert {
+            background: var(--panel);
+            border: 1px solid var(--hairline-2);
+            border-left: 2px solid var(--accent);
+            border-radius: 0;
+            color: var(--paper-dim);
+            padding: 16px 20px;
+          }
+          .alert-success { border-left-color: var(--ok); }
+          .alert-warning { border-left-color: var(--warn); }
+          .alert-danger  { border-left-color: var(--danger); }
+          .alert-info    { border-left-color: var(--accent-2); }
+
+          /* ---------- Modal ---------- */
+          .modal-backdrop.in { opacity: .8; background: #000; }
+          .modal-content {
+            background: var(--panel);
+            color: var(--paper);
+            border: 1px solid var(--hairline-2);
+            border-radius: 0;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,.75);
+          }
+          .modal-header {
+            border-bottom: 1px solid var(--hairline);
+            padding: 18px 22px;
+          }
+          .modal-header .close {
+            color: var(--paper-dim);
+            text-shadow: none;
+            opacity: .8;
+            font-size: 1.6rem;
+            line-height: 1;
+          }
+          .modal-header .close:hover { color: var(--accent); opacity: 1; }
+          .modal-title {
+            font-family: var(--mono);
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .22em;
+            font-weight: 600;
+            color: var(--paper);
+          }
+          .modal-body  { padding: 22px; color: var(--paper-dim); }
+          .modal-footer {
+            border-top: 1px solid var(--hairline);
+            padding: 14px 22px;
+            background: transparent;
+          }
+
+          /* ---------- AJAX loader ---------- */
+          #ajax_loading_indicator {
+            background-color: rgba(14,12,10,.78) !important;
+            backdrop-filter: blur(3px);
+            color: var(--paper);
+          }
+          #ajax_loading_indicator .fa-spinner {
+            color: var(--accent);
+            font-size: 2rem;
+          }
+          #ajax_loading_indicator > div > div + div {
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: .3em;
+            font-size: .8rem;
+            color: var(--paper-dim);
+            margin-top: .8rem;
+          }
         </style>
-        <link rel="stylesheet" href="/admin/assets/bootstrap/css/bootstrap-theme.min.css">
     </head>
     <body>
 
@@ -138,7 +702,7 @@
             <li><a href="#web" class="if-logged-in-admin">Web</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li class="if-logged-in"><a href="#" onclick="do_logout(); return false;" style="color: white">Log out</a></li>
+            <li class="if-logged-in"><a href="#" onclick="do_logout(); return false;">Log out</a></li>
           </ul>
         </div><!--/.navbar-collapse -->
       </div>
@@ -204,7 +768,11 @@
       <hr>
 
       <footer>
-        <p>This is a <a href="https://mailinabox.email">Mail-in-a-Box</a>.</p>
+        <p>
+          <span style="font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: -.01em; color: var(--paper-dim); font-size: 1rem;">a</span>
+          &nbsp;<a href="https://mailinabox.email">Mail-in-a-Box</a>
+          &nbsp;·&nbsp; {{hostname}}
+        </p>
       </footer>
     </div> <!-- /container -->
 
@@ -433,8 +1001,8 @@ function show_panel(panelid) {
     panelid = panelid.getAttribute('href').substring(1);
   }
 
-  $('.admin_panel').hide();
-  $('#panel_' + panelid).show();
+  $('.admin_panel').hide().removeClass('is-active');
+  $('#panel_' + panelid).show().addClass('is-active');
   if (window["show_" + panelid])
     window["show_" + panelid]();
 
