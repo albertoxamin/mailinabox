@@ -69,6 +69,11 @@ apt_install rspamd redis-server opendkim-tools
 mkdir -p "$STORAGE_ROOT/mail/rspamd/redis"
 chown -R redis:redis "$STORAGE_ROOT/mail/rspamd/redis"
 
+# vm.overcommit_memory=1 lets Redis's background save fork reliably on
+# memory-constrained hosts; without it bgsave can fail and Redis will warn.
+echo 'vm.overcommit_memory = 1' > /etc/sysctl.d/60-redis.conf
+sysctl --quiet vm.overcommit_memory=1
+
 # Bind to v4 always; only add ::1 if the host actually has IPv6 (otherwise
 # redis refuses to start with "Cannot assign requested address").
 redis_bind="127.0.0.1"
@@ -117,10 +122,15 @@ chmod 600 "$STORAGE_ROOT/mail/dkim/mail.private"
 # ### Bayes storage path
 #
 # Bayes data lives in Redis (under $STORAGE_ROOT/mail/rspamd/redis), so it is
-# automatically included in backups.
+# automatically included in backups. Note: chown _rspamd on the parent dir
+# only, NOT recursively -- the redis subdir must remain owned by `redis`
+# (the daemon refuses to start otherwise).
 
 mkdir -p "$STORAGE_ROOT/mail/rspamd"
-chown -R _rspamd:_rspamd "$STORAGE_ROOT/mail/rspamd"
+chown _rspamd:_rspamd "$STORAGE_ROOT/mail/rspamd"
+# Reassert ownership of the redis subdir in case an earlier run chown'd
+# it recursively to _rspamd.
+chown -R redis:redis "$STORAGE_ROOT/mail/rspamd/redis"
 
 # ### Rspamd configuration
 #
